@@ -8,7 +8,7 @@ const tableStyle = {
   padding: "10px",
   width: "max-content",
   marginLeft: "50px",
-  color: "white",
+  color: "white"
 };
 
 export const PaginatedEstablishmentsTable = () => {
@@ -18,39 +18,50 @@ export const PaginatedEstablishmentsTable = () => {
   // eslint-disable-next-line no-unused-vars
   const [pageCount, setPageCount] = useState(100);
 
-  useEffect(() => {
-    getEstablishmentRatings(pageNum).then(
-      (result) => {
-        setEstablishments(result.establishments);
-      },
-      (error) => {
-        setError(error);
-      }
-    );
-  }, []);
+  const [isLoading, setLoading] = useState(false);
+  const [authorities, setAuthorities] = useState([]);
+  const [selectedAuthority, setSelectedAuthority] = useState(undefined);
 
-  async function handlePreviousPage() {
-    pageNum > 1 && setPageNum(pageNum - 1);
+  useEffect(() => {
+    getPageRatings();
+  }, [pageNum]);
+
+  const getPageRatings = () => {
+    setLoading(true);
+    setAuthorities([]);
+
     getEstablishmentRatings(pageNum).then(
       (result) => {
-        setEstablishments(result.establishments);
+        console.log(result);
+        const { establishments } = result;
+        const authoritiesIDs = establishments.map((element) => element.LocalAuthorityBusinessID);
+
+        setEstablishments(establishments);
+        setAuthorities(authoritiesIDs);
+        setSelectedAuthority(undefined);
+        setLoading(false);
       },
       (error) => {
         setError(error);
+        setLoading(false);
       }
     );
+  };
+
+  function handlePreviousPage() {
+    pageNum > 1 && setPageNum(pageNum - 1);
   }
 
-  async function handleNextPage() {
+  function handleNextPage() {
     pageNum < pageCount && setPageNum(pageNum + 1);
-    getEstablishmentRatings(pageNum).then(
-      (result) => {
-        setEstablishments(result.establishments);
-      },
-      (error) => {
-        setError(error);
-      }
-    );
+  }
+
+  function handleOnChangeAuthority(event) {
+    setSelectedAuthority(event.target.value);
+  }
+
+  function getFilteredEstablishments() {
+    return establishments.filter((element) => element.LocalAuthorityBusinessID === selectedAuthority);
   }
 
   if (error) {
@@ -59,7 +70,14 @@ export const PaginatedEstablishmentsTable = () => {
     return (
       <div style={tableStyle}>
         <h2>Food Hygiene Ratings</h2>
-        <EstablishmentsTable establishments={establishments} />
+        {isLoading && <p>Loading...</p>}
+        <select name="authority" id="authority" onChange={handleOnChangeAuthority}>
+          <option value="" defaultValue>Select an authority...</option>
+          {authorities.map((authority) => (
+            <option key={authority} value={authority}>{authority}</option>
+          ))}
+        </select>
+        <EstablishmentsTable establishments={selectedAuthority ? getFilteredEstablishments() : establishments} />
         <EstablishmentsTableNavigation
           pageNum={pageNum}
           pageCount={pageCount}
