@@ -15,6 +15,7 @@ const EstablishmentPage = () => {
   const [address, setAddress] = useState("");
   const [rating, setRating] = useState("");
   const [inspectionDate, setInspectionDate] = useState("");
+  const [isLoading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const history = useHistory();
@@ -26,6 +27,7 @@ const EstablishmentPage = () => {
   }, []);
 
   const getDetails = () => {
+    setLoading(true);
     getEstablishmentDetails(id).then((result) => {
       const {
         BusinessName,
@@ -46,6 +48,7 @@ const EstablishmentPage = () => {
       );
       setRating(RatingValue);
       setInspectionDate(formattedDate);
+      setLoading(false);
     }),
       (error) => {
         setError(error);
@@ -68,6 +71,7 @@ const EstablishmentPage = () => {
             </button>
           </div>
           <div>
+            {isLoading && <p>Loading...</p>}
             <p>
               Business Name: <span>{businessName}</span>
             </p>
